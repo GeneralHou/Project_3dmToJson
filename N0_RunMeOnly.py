@@ -4,7 +4,7 @@ import N3_ExtractCorner_pixel
 import N4_TransScale
 
 '''when processing different surface, change the name below and click run then'''
-surface_name = 'S19_0'  # the pure name of the surface/grid
+surface_name = '4-000'  # the pure name of the surface/grid
 
 # create directory to store all coordinates .json files
 output_dir = 'Surface' + '_' + surface_name

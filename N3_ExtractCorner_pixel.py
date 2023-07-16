@@ -1,75 +1,75 @@
 import cv2
-import numpy as np
-import imutils
 import json
+import numpy as np
 
 
-# make it easier to show image later
-def shw_img(image):
-    cv2.imshow('', image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+# this line of the code is from FindCoordinates(my early version)
+class MissingCoorinates:
+    def __init__(self, img):
+        self.img = img
+        self.missing_coordinates = []  # used to store the missing coordinates
+        self.windows_name = 'Click grid corners to pick coordinates(ESC to escape)'
 
+        cv2.namedWindow(self.windows_name, cv2.WINDOW_NORMAL)
+        cv2.setMouseCallback(self.windows_name, self.callback_function)
 
-# extract the conor points
-def extract_extreme_points(img):
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    lower_hsv = np.array([35, 43, 46])  # extract the low value of color
-    high_hsv = np.array([77, 255, 255])  # extract the high value of color
-    mask = cv2.inRange(hsv, lowerb=lower_hsv, upperb=high_hsv)
+    # define the callback function (the callback has its default expression, and it must be obeyed)
+    def callback_function(self, event, x, y, flags, params):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            self.missing_coordinates.append([x, y])
+            print(f'The clicked coordinate value is [{x}, {y}]')
 
-    # blur the mask to improve the contour detect precision
-    blurred = cv2.GaussianBlur(mask, (5, 5), 0)
-    thresh = cv2.threshold(blurred, 60, 255, cv2.THRESH_BINARY)[1]
+    def run(self):
+        while True:
+            cv2.imshow(self.windows_name, self.img)
+            key = cv2.waitKey()
+            if key == 27:  # press to 'ESC' to withdraw
+                break
+        cv2.destroyAllWindows()
+        return self.missing_coordinates
 
-    # find contours in the thresholded image
-    cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cnts = imutils.grab_contours(cnts)
+# this function is used to replace the pick coordinates with coordinates in coordinates.json
+def find_from_coordinates_json(picked_coordinates, folder):
+    def calculate_dist(p1, p2):
+        return np.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
+    
+    with open(f'{folder}/coordinates.json', 'r') as f:
+        result = json.load(f)
+    # int(k) is used to change the key from '1' to 1
+    # use 'img_H - v[1]' to change y coordinate direction
+    coordinates = {int(k): [v[0], v[1]] for k, v in result.items()}
+    for pick_k, pick_v in picked_coordinates.items():
+        distance = float('inf')
+        for v in coordinates.values():
+            temp_dist = calculate_dist(pick_v, v)
+            if temp_dist < distance:
+                picked_coordinates[pick_k] = v
+                distance = temp_dist
+            else:
+                continue
+    return picked_coordinates
 
-    # compute the center of the contour
-    corner_coordinates = []
-    for c in cnts:
-        M = cv2.moments(c)
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
-        corner_coordinates.append([cX, cY])
-    return corner_coordinates
 
 def extract_corner(surface_name):
     output_dir = 'Surface_' + surface_name
     # img pre-process
-    file_name = output_dir + '/' + surface_name + '_crop.png'
+    file_name = output_dir + '/' + surface_name + '_crop.jpg'
     img = cv2.imread(file_name)
 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    t, binary = cv2.threshold(gray, 250, 255, cv2.THRESH_BINARY)
-
-    # find contours
-    contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-
-    # draw contours
-    bgr_white = np.ones((img.shape[0], img.shape[1]), dtype=np.uint8) * 255
-    cnt_img = cv2.drawContours(bgr_white, contours, contourIdx=1, color=(0, 0, 0), thickness=1)
-    save_grid_bound_name = output_dir + '/' + 'grid_bound.png'
-    cv2.imwrite(save_grid_bound_name, cnt_img)
-
-    # the extreme points( LTop LBottom RTop RBottom )
-    # reference: https://www.cnblogs.com/DOMLX/p/8763369.html
-    cnt_img = np.float32(cnt_img)
-    dst = cv2.cornerHarris(cnt_img, 6, 11, 0.06)
-    dst = cv2.dilate(dst, None)
-    img[dst > 0.01 * dst.max()] = [0, 255, 0]
-
-    corner_coordinates = extract_extreme_points(img)
+    # the main part of this code
+    corner_coordinates = MissingCoorinates(img).run()
 
     # the order of extracted coordinates is random, and below is used to make sure it is in the order I want
     Left, Right = sorted(corner_coordinates)[:2], sorted(corner_coordinates)[-2:]
     LT, LB = sorted(Left, key=lambda x: x[1])[0], sorted(Left, key=lambda x: x[1])[1]
     RT, RB = sorted(Right, key=lambda x: x[1])[0], sorted(Right, key=lambda x: x[1])[1]
     dict_corner_coordinates = {x: y for x, y in zip(['LT', 'LB', 'RT', 'RB'], [LT, LB, RT, RB])}
+
+    # replace the pick coordinates with coordinates in coordinates.json
+    dict_corner_coordinates = find_from_coordinates_json(dict_corner_coordinates, output_dir)
+
     dict_corner_coordinates['img_H'] = img.shape[0]
     # the code of the line above is used to prepare for change the y coordinate direction of cv2
-
     print('Four Coordinates:\n', dict_corner_coordinates)
     json_str = json.dumps(dict_corner_coordinates, indent=4)
     save_dir = output_dir + '/' + 'corner_coordinates_pixel.json'
@@ -78,4 +78,4 @@ def extract_corner(surface_name):
 
 
 if __name__ == '__main__':
-    extract_corner(surface_name='4-000')
+    extract_corner(surface_name='S19_0')

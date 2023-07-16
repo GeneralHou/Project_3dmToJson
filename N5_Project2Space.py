@@ -19,14 +19,13 @@ def Project2Space(surface_name):
 
     # select the surface
     surface = rs.GetObject("Select surface to project onto", rs.filter.surface)
-
     projected = {}
     miss_n = 0
     miss_coord_key = []
     for i in range(len(coordinates)):
         result = rs.ProjectPointToSurface(coordinates[i], surface, (0,0,-1))
         if len(result) > 0:
-            result = result[0]  # without this line, it will have bug when runing the code next line
+            result = result[0]  # without this line, it will have bug when running the code next line
             projected[i] = [round(result.X,2), round(result.Y,2), round(result.Z,2)]
         else:
             miss_coord_key.append(i)
@@ -49,4 +48,4 @@ def Project2Space(surface_name):
 
 
 if __name__ == '__main__':
-    Project2Space(surface_name='S19_0')
+    Project2Space(surface_name='4-000')

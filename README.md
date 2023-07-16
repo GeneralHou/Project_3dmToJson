@@ -1,5 +1,5 @@
 how to use Project_3dmToJson:
-virtual environment(in my shcool desktop): nurbs
+virtual environment(in my school desktop): nurbs
 
 ※※※※※※※
 Please prepare three files:   
@@ -16,7 +16,7 @@ Step3: put the corresponding .png(the synthesized grid image after crop) and the
 
 Step3: open N0_RunMeOnly.py and change the string pass to variable "surface_name"
 
-Step4: clik Run
+Step4: click Run
 
 --------------------------------
 ■■■■To get the 3d coordinates:
@@ -27,3 +27,8 @@ in Rhino: type 'runpythonscipt'
 --------------------------------
 ■■■■In order to get the corresponding 3d .html file, we need to put the "coordinates_space.json" under "20230102FindCoordinate" and run "N7_UseCoordTopoDrawGrid_3D.py"
 
+
+****
+## 20230716 [Modify]
+1. Modified N3.py, Using new way to pick up pixel corners
+2. Modified N4.py, adding adjustment in trans and scale factors

@@ -31,5 +31,5 @@ def extract_corner(surface_name):
         json_file.write(json_str)
 
 if __name__ == '__main__':
-    extract_corner(surface_name='4-000')
+    extract_corner(surface_name='S19_0')
 

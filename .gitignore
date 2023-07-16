@@ -1,0 +1,8 @@
+__pycache__
+.vscode
+Surface*
+Trans3dm2json/*
+!Trans3dm2json/*.exe
+!Trans3dm2json/*.txt
+!Trans3dm2json/*.url
+temp*
