@@ -17,8 +17,10 @@ def Project2Space(surface_name):
     coordinates = {int(k): tuple(v) for k, v in result.items()}
 
 
-    # select the surface
-    surface = rs.GetObject("Select surface to project onto", rs.filter.surface)
+    # get the surface
+    all_sur = rs.filter.surface  # use filter to get all surfaces
+    sur_ids = rs.ObjectsByType(all_sur, select=True)  # get ids of surfaces
+    surface = sur_ids[0]  # get first one (actually we only have one)
     projected = {}
     miss_n = 0
     miss_coord_key = []
